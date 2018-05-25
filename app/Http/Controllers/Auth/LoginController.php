@@ -70,17 +70,20 @@ class LoginController extends Controller
      */
     public function findOrCreateUser(\Laravel\Socialite\Two\User $socialUser, string $provider)
     {
-        $user = User::firstOrCreate(
-            ['email' => $socialUser->getEmail()],
-            [
-                'name' => $socialUser->nickname,
-                'email' => $socialUser->email,
-                'provider' => $provider,
-                'provider_id' => $socialUser->id,
-                'avatar' => $socialUser->avatar,
-                'details' => $socialUser->user
-            ]
-        );
-        return $user;
+        $dataArr = [
+            'name' => $socialUser->nickname,
+            'email' => $socialUser->email,
+            'provider' => $provider,
+            'provider_id' => $socialUser->id,
+            'avatar' => $socialUser->avatar,
+            'details' => $socialUser->user
+        ];
+        $currentUser = User::where(['email' => $socialUser->getEmail()])->first();
+        if ($currentUser) {
+            $currentUser->update($dataArr);
+            return $currentUser;
+        } else {
+            return User::create($dataArr);
+        }
     }
 }
