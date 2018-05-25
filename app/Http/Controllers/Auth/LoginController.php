@@ -56,9 +56,8 @@ class LoginController extends Controller
      */
     public function handleProviderCallback(string $provider)
     {
-        $user = Socialite::driver($provider)->stateless()->user();
-        $authUser = $this->findOrCreateUser($user, $provider);
-        dd($user);
+        $authUser = $this->findOrCreateUser(Socialite::driver($provider)->stateless()->user(), $provider);
+//        dd($authUser->createToken($user->email)->accessToken);
         // $user->token;
     }
 
@@ -69,17 +68,19 @@ class LoginController extends Controller
      * @param $provider Social auth provider
      * @return  User
      */
-    public function findOrCreateUser(User $user, string $provider)
+    public function findOrCreateUser(\Laravel\Socialite\Two\User $socialUser, string $provider)
     {
-        $authUser = User::where('provider_id', $user->id)->first();
-        if ($authUser) {
-            return $authUser;
-        }
-        return User::create([
-            'name' => $user->name,
-            'email' => $user->email,
-            'provider' => $provider,
-            'provider_id' => $user->id
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => $socialUser->getEmail()],
+            [
+                'name' => $socialUser->nickname,
+                'email' => $socialUser->email,
+                'provider' => $provider,
+                'provider_id' => $socialUser->id,
+                'avatar' => $socialUser->avatar,
+                'details' => $socialUser->user
+            ]
+        );
+        return $user;
     }
 }

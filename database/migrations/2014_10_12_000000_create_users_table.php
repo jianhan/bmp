@@ -20,8 +20,8 @@ class CreateUsersTable extends Migration
             $table->string('password')->nullable();
             $table->string('provider', 256)->nullable();
             $table->string('provider_id', 256)->nullable();
-            $table->string('avatar_url')->nullable();
-            $table->text('extra')->nullable();
+            $table->string('avatar')->nullable();
+            $table->text('details')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
