@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Socialite;
+use function trim;
 
 class LoginController extends Controller
 {
@@ -52,13 +53,19 @@ class LoginController extends Controller
     /**
      * Obtain the user information from GitHub.
      *
-     * @return \Illuminate\Http\Response
+     * @param string $provider Third party provider, github, twitter, facebook ,etc..
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @throws \Exception
      */
     public function handleProviderCallback(string $provider)
     {
-        $authUser = $this->findOrCreateUser(Socialite::driver($provider)->stateless()->user(), $provider);
-//        dd($authUser->createToken($user->email)->accessToken);
-        // $user->token;
+        $user = $this->findOrCreateUser(Socialite::driver($provider)->stateless()->user(), $provider);
+        $spaAuthURL = trim(env('SPA_AUTH_URL', false));
+        if (!$spaAuthURL) {
+            throw new \Exception("SAP_AUTH_URL variable not set");
+        }
+
+        return redirect($spaAuthURL . '/' . $user->createToken('PERSONAL_ACCESS_TOKEN')->accessToken);
     }
 
     /**
@@ -68,7 +75,7 @@ class LoginController extends Controller
      * @param $provider Social auth provider
      * @return  User
      */
-    public function findOrCreateUser(\Laravel\Socialite\Two\User $socialUser, string $provider)
+    public function findOrCreateUser(\Laravel\Socialite\Two\User $socialUser, string $provider): User
     {
         $dataArr = [
             'name' => $socialUser->nickname,
